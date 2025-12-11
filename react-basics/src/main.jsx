@@ -24,11 +24,29 @@ function ProductList() {
     <Product/>
     </>
   )
-  return <h2>Product List</h2>
 }
 
 function Product(){
-  return <h3>Product</h3>
+  const imageUrl = "1.jpg";
+  const title = "IPhone 16";
+  const description = "Lorem ipsum dolor sit amet consectetur.";
+  const price = 80000
+
+  const productItem = {
+    "image" : "1.jpg",
+    "title" : "IPhone 16",
+    "description" : "Lorem ipsum dolor sit amet consectetur.",
+    "price" : 80000
+  }
+
+  return (
+    <div>
+      <img src={"/img/" + productItem.image} alt="" />
+      <h2>{productItem.title}</h2>
+      <p>{productItem.description}</p>
+      <span>{productItem.price}</span>
+    </div>
+  )
 }
 
 createRoot(document.getElementById('root')).render(
