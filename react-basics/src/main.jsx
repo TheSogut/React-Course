@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import "./index.css";
+
 function App() {
   return (
     <>
@@ -12,7 +14,12 @@ function App() {
 }
 
 function Header() {
-  return <h1>Header</h1>;
+  const style = {
+    color: "red",
+    fontSize: "30px",
+    textTransform: "uppercase",
+  };
+  return <h1 style={style}>header</h1>;
 }
 
 function ProductList() {
@@ -51,7 +58,7 @@ function ProductList() {
 
   return (
     <>
-      <h2>Product List</h2>
+      <h2 className="title">Product List</h2>
       {items.length > 0 ? (
         <div id="product-list">
           {items.map((item, index) => (
@@ -72,7 +79,11 @@ function Product({ productObj }) {
       <img src={"/img/" + productObj.image} alt="" />
       <h2>{productObj.title}</h2>
       <p>{productObj.description}</p>
-      <span>{productObj.price}</span>
+      <span
+        className={`f20 ${productObj.price < 100000 ? "discount" : "price"}`}
+      >
+        {productObj.price}
+      </span>
     </div>
   );
 }
