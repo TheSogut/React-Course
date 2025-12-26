@@ -26,8 +26,9 @@ export default function StarRating({
   color = "#fcc419",
   size = 48,
 }) {
-  const [rating, setRating] = useState(3);
-  const [hoverRating, setHoverRating] = useState(3);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+
   return (
     <div style={containerStyle}>
       <div style={itemContainerStyle}>

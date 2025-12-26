@@ -56,17 +56,26 @@ const selected_movie_list = [
     Year: "1985",
     Poster:
       "https://image.tmdb.org/t/p/original/fNOH9f1aA7XRTzl1sAOx9iF553Q.jpg",
-    duration: 110,
-    rating: 7.0,
+    duration: 125,
+    rating: 8.8,
   },
 ];
 
-const getAvarage = (array) =>
-  array.reduce((sum, value) => sum + value, 0) / array.length;
+const getAverage = (array) =>
+  array.reduce((sum, value) => sum + value, 2) / array.length;
+
+const api_key = "3424d512df114e85612d3e123d068afc";
+const query = "Lord";
 
 export default function App() {
-  const [movies, setMovies] = useState(movie_list);
-  const [selectedMovies, setSelectedMovies] = useState(selected_movie_list);
+  const [movies, setMovies] = useState([]);
+  const [selectedMovies, setSelectedMovies] = useState([]);
+
+  fetch(
+    `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}`
+  )
+    .then((res) => res.json())
+    .then((data) => setMovies(data.results));
 
   return (
     <>
@@ -118,7 +127,7 @@ function Logo() {
 function Search() {
   return (
     <div className="col-4">
-      <input type="text" className="form-control" placeholder="Film Ara" />
+      <input type="text" className="form-control" placeholder="Film ara..." />
     </div>
   );
 }
@@ -126,7 +135,7 @@ function Search() {
 function NavSearchResults({ movies }) {
   return (
     <div className="col-4 text-end">
-      <strong>{movies.length}</strong> Kayıt Bulundu
+      <strong>{movies.length}</strong> kayıt bulundu.
     </div>
   );
 }
@@ -137,7 +146,6 @@ function Main({ children }) {
 
 function ListContainer({ children }) {
   const [isOpen, setIsOpen] = useState(true);
-
   return (
     <div className="movie-list">
       <button
@@ -169,13 +177,22 @@ function Movie({ movie }) {
   return (
     <div className="col mb-2">
       <div className="card">
-        <img src={movie.Poster} alt={movie.Title} className="card-img-top" />
-      </div>
-      <div className="card-body">
-        <h6 className="card-title">{movie.Title}</h6>
-        <div>
-          <i className="bi bi-calendar2-date me-1"></i>
-          <span>{movie.Year}</span>
+        <img
+          src={
+            movie.poster_path
+              ? `https://media.themoviedb.org/t/p/w440_and_h660_face` +
+                movie.poster_path
+              : "/img/no-image.jpg"
+          }
+          alt={movie.title}
+          className="card-img-top"
+        />
+        <div className="card-body">
+          <h6 className="card-title">{movie.title}</h6>
+          <div>
+            <i className="bi bi-calendar2-date me-1"></i>
+            <span>{movie.release_date}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -183,8 +200,8 @@ function Movie({ movie }) {
 }
 
 function MyListSummary({ selectedMovies }) {
-  const avgRating = getAvarage(selected_movie_list.map((m) => m.rating));
-  const avgDuration = getAvarage(selected_movie_list.map((m) => m.duration));
+  const avgRating = getAverage(selected_movie_list.map((m) => m.rating));
+  const avgDuration = getAverage(selected_movie_list.map((m) => m.duration));
   return (
     <div className="card mb-2">
       <div className="card-body">
@@ -196,7 +213,7 @@ function MyListSummary({ selectedMovies }) {
           </p>
           <p>
             <i className="bi bi-hourglass-split text-warning me-1"></i>
-            <span>{avgDuration.toFixed(0)} m</span>
+            <span>{avgDuration} dk</span>
           </p>
         </div>
       </div>
@@ -212,7 +229,7 @@ function MyMovieList({ selectedMovies }) {
 
 function MyListMovie({ movie }) {
   return (
-    <div className="card mb-2" key={movie.Id}>
+    <div className="card mb-2">
       <div className="row">
         <div className="col-4">
           <img
@@ -231,7 +248,7 @@ function MyListMovie({ movie }) {
               </p>
               <p>
                 <i className="bi bi-hourglass text-warning me-1"></i>
-                <span>{movie.duration} m</span>
+                <span>{movie.duration} dk</span>
               </p>
             </div>
           </div>
