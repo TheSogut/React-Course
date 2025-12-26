@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const movie_list = [
   {
@@ -62,7 +62,7 @@ const selected_movie_list = [
 ];
 
 const getAverage = (array) =>
-  array.reduce((sum, value) => sum + value, 2) / array.length;
+  array.reduce((sum, value) => sum + value / array.length, 0);
 
 const api_key = "3424d512df114e85612d3e123d068afc";
 const query = "Lord";
@@ -70,12 +70,36 @@ const query = "Lord";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [selectedMovies, setSelectedMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}`
-  )
-    .then((res) => res.json())
-    .then((data) => setMovies(data.results));
+  useEffect(function () {
+    async function getMovies() {
+      try {
+        setLoading(true);
+        setError("");
+        const res = await fetch(
+          `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}`
+        );
+
+        if (!res.ok) {
+          throw new Error("Bilinmeyen bir hata oluştu");
+        }
+
+        const data = await res.json();
+        if (data.total_result == 0) {
+          throw new Error("Film Bulunamadı");
+        }
+
+        setMovies(data.results);
+      } catch (err) {
+        setError(err.message);
+      }
+      setLoading(false);
+    }
+
+    getMovies();
+  }, []);
 
   return (
     <>
@@ -88,7 +112,11 @@ export default function App() {
         <div className="row mt-2">
           <div className="col-md-9">
             <ListContainer>
-              <MovieList movies={movies} />
+              {/* {loading ? <Loading /> : <MovieList movies={movies} />} */}
+
+              {loading && <Loading />}
+              {!loading && !error && <MovieList movies={movies} />}
+              {error && <ErrorMessage message={error} />}
             </ListContainer>
           </div>
           <div className="col-md-3">
@@ -102,6 +130,18 @@ export default function App() {
         </div>
       </Main>
     </>
+  );
+}
+
+function ErrorMessage({ message }) {
+  return <div className="alert alert-danger">{message}</div>;
+}
+
+function Loading() {
+  return (
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hiden">Loading...</span>
+    </div>
   );
 }
 
@@ -167,7 +207,7 @@ function MovieList({ movies }) {
   return (
     <div className="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-4">
       {movies.map((movie) => (
-        <Movie movie={movie} key={movie.Id} />
+        <Movie movie={movie} key={movie.id} />
       ))}
     </div>
   );
@@ -200,8 +240,8 @@ function Movie({ movie }) {
 }
 
 function MyListSummary({ selectedMovies }) {
-  const avgRating = getAverage(selected_movie_list.map((m) => m.rating));
-  const avgDuration = getAverage(selected_movie_list.map((m) => m.duration));
+  const avgRating = getAverage(selectedMovies.map((m) => m.rating));
+  const avgDuration = getAverage(selectedMovies.map((m) => m.duration));
   return (
     <div className="card mb-2">
       <div className="card-body">
