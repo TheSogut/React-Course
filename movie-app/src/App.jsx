@@ -1,111 +1,80 @@
 import { useEffect, useState } from "react";
-
-const movie_list = [
-  {
-    Id: "769",
-    Title: "GoodFellas",
-    Year: "1990",
-    Poster:
-      "https://image.tmdb.org/t/p/original/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg",
-  },
-  {
-    Id: "120",
-    Title: "The Lord of the Rings",
-    Year: "2001",
-    Poster:
-      "https://image.tmdb.org/t/p/original/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
-  },
-  {
-    Id: "27205",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
-      "https://image.tmdb.org/t/p/original/ljsZTbVsrQSqZgWeep2B1QiDKuh.jpg",
-  },
-  {
-    Id: "105",
-    Title: "Back to the Future",
-    Year: "1985",
-    Poster:
-      "https://image.tmdb.org/t/p/original/fNOH9f1aA7XRTzl1sAOx9iF553Q.jpg",
-  },
-];
-
-const selected_movie_list = [
-  {
-    Id: "769",
-    Title: "GoodFellas",
-    Year: "1990",
-    Poster:
-      "https://image.tmdb.org/t/p/original/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg",
-    duration: 120,
-    rating: 8.4,
-  },
-  {
-    Id: "120",
-    Title: "The Lord of the Rings",
-    Year: "2001",
-    Poster:
-      "https://image.tmdb.org/t/p/original/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
-    duration: 125,
-    rating: 8.8,
-  },
-  {
-    Id: "105",
-    Title: "Back to the Future",
-    Year: "1985",
-    Poster:
-      "https://image.tmdb.org/t/p/original/fNOH9f1aA7XRTzl1sAOx9iF553Q.jpg",
-    duration: 125,
-    rating: 8.8,
-  },
-];
+import StarRating from "./StarRating";
 
 const getAverage = (array) =>
   array.reduce((sum, value) => sum + value / array.length, 0);
 
 const api_key = "3424d512df114e85612d3e123d068afc";
-const query = "Lord";
 
 export default function App() {
+  const [query, setQuery] = useState("father");
   const [movies, setMovies] = useState([]);
   const [selectedMovies, setSelectedMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
-  useEffect(function () {
-    async function getMovies() {
-      try {
-        setLoading(true);
-        setError("");
-        const res = await fetch(
-          `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}`
-        );
+  function handleSelectedMovie(id) {
+    setSelectedMovie((selectedMovie) => (id === selectedMovie ? null : id));
+  }
 
-        if (!res.ok) {
-          throw new Error("Bilinmeyen bir hata oluştu");
+  function handleUnselectedMovie() {
+    setSelectedMovie(null);
+  }
+
+  function handleAddToList(movie) {
+    setSelectedMovies((selectedMovies) => [...selectedMovies, movie]);
+    handleUnselectedMovie();
+  }
+
+  function handleDeleteFromList(id) {
+    setSelectedMovies((selectedMovies) =>
+      selectedMovies.filter((m) => m.id !== id)
+    );
+  }
+
+  useEffect(
+    function () {
+      async function getMovies() {
+        try {
+          setLoading(true);
+          setError("");
+          const res = await fetch(
+            `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}`
+          );
+
+          if (!res.ok) {
+            throw new Error("Bilinmeyen bir hata oluştu");
+          }
+
+          const data = await res.json();
+          if (data.total_result == 0) {
+            throw new Error("Film Bulunamadı");
+          }
+
+          setMovies(data.results);
+        } catch (err) {
+          setError(err.message);
         }
-
-        const data = await res.json();
-        if (data.total_result == 0) {
-          throw new Error("Film Bulunamadı");
-        }
-
-        setMovies(data.results);
-      } catch (err) {
-        setError(err.message);
+        setLoading(false);
       }
-      setLoading(false);
-    }
 
-    getMovies();
-  }, []);
+      if (query.length < 4) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+
+      getMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <Nav>
         <Logo />
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NavSearchResults movies={movies} />
       </Nav>
       <Main>
@@ -115,16 +84,34 @@ export default function App() {
               {/* {loading ? <Loading /> : <MovieList movies={movies} />} */}
 
               {loading && <Loading />}
-              {!loading && !error && <MovieList movies={movies} />}
+              {!loading && !error && (
+                <MovieList
+                  movies={movies}
+                  onSelectMovie={handleSelectedMovie}
+                  selectedMovie={selectedMovie}
+                />
+              )}
               {error && <ErrorMessage message={error} />}
             </ListContainer>
           </div>
           <div className="col-md-3">
             <ListContainer>
-              <>
-                <MyListSummary selectedMovies={selectedMovies} />
-                <MyMovieList selectedMovies={selectedMovies} />
-              </>
+              {selectedMovie ? (
+                <MovieDetails
+                  selectedMovie={selectedMovie}
+                  onUnselectMovie={handleUnselectedMovie}
+                  onAddToList={handleAddToList}
+                  selectedMovies={selectedMovies}
+                />
+              ) : (
+                <>
+                  <MyListSummary selectedMovies={selectedMovies} />
+                  <MyMovieList
+                    selectedMovies={selectedMovies}
+                    OnDeleteFromList={handleDeleteFromList}
+                  />
+                </>
+              )}
             </ListContainer>
           </div>
         </div>
@@ -164,10 +151,16 @@ function Logo() {
   );
 }
 
-function Search() {
+function Search({ query, setQuery }) {
   return (
     <div className="col-4">
-      <input type="text" className="form-control" placeholder="Film ara..." />
+      <input
+        type="text"
+        onChange={(e) => setQuery(e.target.value)}
+        value={query}
+        className="form-control"
+        placeholder="Film ara..."
+      />
     </div>
   );
 }
@@ -203,20 +196,145 @@ function ListContainer({ children }) {
   );
 }
 
-function MovieList({ movies }) {
+function MovieList({ movies, onSelectMovie, selectedMovie }) {
   return (
     <div className="row row-cols-1 row-cols-md-3 row-cols-xl-4 g-4">
       {movies.map((movie) => (
-        <Movie movie={movie} key={movie.id} />
+        <Movie
+          movie={movie}
+          key={movie.id}
+          onSelectMovie={onSelectMovie}
+          selectedMovie={selectedMovie}
+        />
       ))}
     </div>
   );
 }
 
-function Movie({ movie }) {
+function MovieDetails({
+  selectedMovie,
+  onUnselectMovie,
+  onAddToList,
+  selectedMovies,
+}) {
+  const [movie, setMovie] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [userRating, setUserRating] = useState("");
+
+  const isAddedToList = selectedMovies.map((m) => m.id).includes(selectedMovie);
+  const selectedMovieUserRating = selectedMovies.find(
+    (m) => m.id === selectedMovie
+  )?.userRating;
+
+  function handleAddToList() {
+    const newMovie = {
+      ...movie,
+      userRating,
+    };
+
+    onAddToList(newMovie);
+  }
+
+  useEffect(
+    function () {
+      async function getMovieDetails() {
+        setLoading(true);
+        const res = await fetch(
+          `https://api.themoviedb.org/3/movie/${selectedMovie}?api_key=${api_key}`
+        );
+        const data = await res.json();
+        setMovie(data);
+        setLoading(false);
+      }
+
+      getMovieDetails();
+    },
+    [selectedMovie]
+  );
+
+  return (
+    <>
+      {loading ? (
+        <Loading />
+      ) : (
+        <div className="border p-2 mb-3">
+          <div className="row">
+            <div className="col-4">
+              <img
+                src={
+                  movie.poster_path
+                    ? `https://media.themoviedb.org/t/p/w440_and_h660_face` +
+                      movie.poster_path
+                    : "/img/no-image.jpg"
+                }
+                alt={movie.title}
+                className="img-fluid rounded"
+              />
+            </div>
+            <div className="col-8">
+              <h6>{movie.title}</h6>
+              <p>
+                <i className="bi bi-calendar2-date me-1"></i>
+                <span>{movie.release_date}</span>
+              </p>
+              <p>
+                <i className="bi bi-star-fill text-warning"></i>
+                <span>{movie.vote_average}</span>
+              </p>
+            </div>
+            <div className="col-12 border-top p-3 mt-3">
+              <p>{movie.overview}</p>
+              <p>
+                {movie.genres?.map((genre) => (
+                  <span key={genre.id} className="badge text-bg-primary me-1">
+                    {genre.name}
+                  </span>
+                ))}
+              </p>
+              {!isAddedToList ? (
+                <>
+                  <div className="my-4">
+                    <StarRating
+                      maxRating={10}
+                      size={20}
+                      onRating={setUserRating}
+                    />
+                  </div>
+
+                  <button
+                    className="btn btn-primary me-1"
+                    onClick={() => handleAddToList(movie)}
+                  >
+                    Listeye Ekle
+                  </button>
+                </>
+              ) : (
+                <p>
+                  Film Listenizde. Değerlendirme {selectedMovieUserRating}{" "}
+                  <i className="bi bi-stars text-warning me-1"></i>
+                </p>
+              )}
+
+              <button className="btn btn-danger" onClick={onUnselectMovie}>
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Movie({ movie, onSelectMovie, selectedMovie }) {
   return (
     <div className="col mb-2">
-      <div className="card">
+      <div
+        className={`card movie ${
+          selectedMovie === movie.id ? "selected-movie" : ""
+        }`}
+        onClick={() => onSelectMovie(movie.id)}
+      >
         <img
           src={
             movie.poster_path
@@ -240,8 +358,9 @@ function Movie({ movie }) {
 }
 
 function MyListSummary({ selectedMovies }) {
-  const avgRating = getAverage(selectedMovies.map((m) => m.rating));
-  const avgDuration = getAverage(selectedMovies.map((m) => m.duration));
+  const avgRating = getAverage(selectedMovies.map((m) => m.vote_average));
+  const avgDuration = getAverage(selectedMovies.map((m) => m.runtime));
+  const avgUserRating = getAverage(selectedMovies.map((m) => m.userRating));
   return (
     <div className="card mb-2">
       <div className="card-body">
@@ -250,6 +369,10 @@ function MyListSummary({ selectedMovies }) {
           <p>
             <i className="bi bi-star-fill text-warning me-1"></i>
             <span>{avgRating.toFixed(2)}</span>
+          </p>
+          <p>
+            <i className="bi bi-stars text-warning me-1"></i>
+            <span>{avgUserRating.toFixed(2)}</span>
           </p>
           <p>
             <i className="bi bi-hourglass-split text-warning me-1"></i>
@@ -261,20 +384,29 @@ function MyListSummary({ selectedMovies }) {
   );
 }
 
-function MyMovieList({ selectedMovies }) {
+function MyMovieList({ selectedMovies, OnDeleteFromList }) {
   return selectedMovies.map((movie) => (
-    <MyListMovie movie={movie} key={movie.Id} />
+    <MyListMovie
+      movie={movie}
+      key={movie.id}
+      OnDeleteFromList={OnDeleteFromList}
+    />
   ));
 }
 
-function MyListMovie({ movie }) {
+function MyListMovie({ movie, OnDeleteFromList }) {
   return (
     <div className="card mb-2">
       <div className="row">
         <div className="col-4">
           <img
-            src={movie.Poster}
-            alt={movie.Title}
+            src={
+              movie.poster_path
+                ? `https://media.themoviedb.org/t/p/w440_and_h660_face` +
+                  movie.poster_path
+                : "/img/no-image.jpg"
+            }
+            alt={movie.title}
             className="img-fluid rounded-start"
           />
         </div>
@@ -284,13 +416,19 @@ function MyListMovie({ movie }) {
             <div className="d-flex justify-content-between">
               <p>
                 <i className="bi bi-star-fill text-warning me-1"></i>
-                <span>{movie.rating}</span>
+                <span>{movie.vote_average}</span>
               </p>
               <p>
                 <i className="bi bi-hourglass text-warning me-1"></i>
-                <span>{movie.duration} dk</span>
+                <span>{movie.runtime} dk</span>
               </p>
             </div>
+            <button
+              className="btn btn-danger"
+              onClick={() => OnDeleteFromList(movie.id)}
+            >
+              Sil
+            </button>
           </div>
         </div>
       </div>
