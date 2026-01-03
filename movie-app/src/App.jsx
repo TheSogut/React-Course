@@ -7,12 +7,24 @@ const getAverage = (array) =>
 const api_key = "3424d512df114e85612d3e123d068afc";
 
 export default function App() {
-  const [query, setQuery] = useState("father");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [selectedMovies, setSelectedMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedMovie, setSelectedMovie] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalResults, setTotalResults] = useState(0);
+
+  function NextPage() {
+    setCurrentPage(currentPage + 1);
+  }
+
+  function PreviousPage() {
+    setCurrentPage(currentPage - 1);
+  }
 
   function handleSelectedMovie(id) {
     setSelectedMovie((selectedMovie) => (id === selectedMovie ? null : id));
@@ -35,12 +47,16 @@ export default function App() {
 
   useEffect(
     function () {
-      async function getMovies() {
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      async function getMovies(page) {
         try {
           setLoading(true);
           setError("");
           const res = await fetch(
-            `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}`
+            `https://api.themoviedb.org/3/search/movie?api_key=${api_key}&query=${query}&page=${page}`,
+            { signal: signal }
           );
 
           if (!res.ok) {
@@ -53,8 +69,14 @@ export default function App() {
           }
 
           setMovies(data.results);
+          setTotalPages(data.total_pages);
+          setTotalResults(data.total_results);
         } catch (err) {
-          setError(err.message);
+          if (err.name === "AbortError") {
+            console.log("aborted...");
+          } else {
+            setError(err.message);
+          }
         }
         setLoading(false);
       }
@@ -65,17 +87,26 @@ export default function App() {
         return;
       }
 
-      getMovies();
+      getMovies(currentPage);
+
+      return () => {
+        controller.abort();
+      };
     },
-    [query]
+
+    [query, currentPage]
   );
 
   return (
     <>
       <Nav>
         <Logo />
-        <Search query={query} setQuery={setQuery} />
-        <NavSearchResults movies={movies} />
+        <Search
+          query={query}
+          setQuery={setQuery}
+          setCurrentPage={setCurrentPage}
+        />
+        <NavSearchResults totalResults={totalResults} />
       </Nav>
       <Main>
         <div className="row mt-2">
@@ -85,11 +116,23 @@ export default function App() {
 
               {loading && <Loading />}
               {!loading && !error && (
-                <MovieList
-                  movies={movies}
-                  onSelectMovie={handleSelectedMovie}
-                  selectedMovie={selectedMovie}
-                />
+                <>
+                  {movies.length > 0 && (
+                    <>
+                      <MovieList
+                        movies={movies}
+                        onSelectMovie={handleSelectedMovie}
+                        selectedMovie={selectedMovie}
+                      />
+                      <Pagination
+                        NextPage={NextPage}
+                        PreviousPage={PreviousPage}
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                      />
+                    </>
+                  )}
+                </>
               )}
               {error && <ErrorMessage message={error} />}
             </ListContainer>
@@ -117,6 +160,29 @@ export default function App() {
         </div>
       </Main>
     </>
+  );
+}
+
+function Pagination({ NextPage, PreviousPage, currentPage, totalPages }) {
+  return (
+    <nav>
+      <ul className="pagination d-flex justify-content-between">
+        <li className={currentPage != 1 ? "page-item" : "page-item disabled"}>
+          <a href="#" onClick={PreviousPage} className="page-link">
+            Geri
+          </a>
+        </li>
+        <li
+          className={
+            currentPage != totalPages ? "page-item" : "page-item disabled"
+          }
+        >
+          <a href="#" onClick={NextPage} className="page-link">
+            İleri
+          </a>
+        </li>
+      </ul>
+    </nav>
   );
 }
 
@@ -151,12 +217,15 @@ function Logo() {
   );
 }
 
-function Search({ query, setQuery }) {
+function Search({ query, setQuery, setCurrentPage }) {
   return (
     <div className="col-4">
       <input
         type="text"
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setCurrentPage(1);
+        }}
         value={query}
         className="form-control"
         placeholder="Film ara..."
@@ -165,10 +234,10 @@ function Search({ query, setQuery }) {
   );
 }
 
-function NavSearchResults({ movies }) {
+function NavSearchResults({ totalResults }) {
   return (
     <div className="col-4 text-end">
-      <strong>{movies.length}</strong> kayıt bulundu.
+      <strong>{totalResults}</strong> kayıt bulundu.
     </div>
   );
 }
