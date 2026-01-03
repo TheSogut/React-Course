@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import StarRating from "./StarRating";
 import useMovies from "./hooks/useMovies";
 import useMovieDetails from "./hooks/useMovieDetails";
+import useLocalStorage from "./hooks/useLocalStorage";
 
 const getAverage = (array) =>
   array.reduce((sum, value) => sum + value / array.length, 0);
@@ -10,7 +11,10 @@ const api_key = "3424d512df114e85612d3e123d068afc";
 
 export default function App() {
   const [query, setQuery] = useState("");
-  const [selectedMovies, setSelectedMovies] = useState([]);
+  const [selectedMovies, setSelectedMovies] = useLocalStorage(
+    [],
+    "selectedMovies"
+  );
   const [selectedMovie, setSelectedMovie] = useState(null);
 
   const {
