@@ -1,4 +1,5 @@
-import Login from "./components/Login";
+import Login from "./components/LoginState";
+import Register from "./components/Register";
 
 function App() {
   return (

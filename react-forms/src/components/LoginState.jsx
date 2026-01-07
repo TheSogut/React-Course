@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Input from "./Input";
 
 export default function Login() {
   const initalValues = { email: "", password: "" };
@@ -45,42 +46,28 @@ export default function Login() {
         <h1>Login</h1>
         <p>Please enter your login and password!</p>
       </div>
-      <div className="mb-3">
-        <label htmlFor="email" className="form-label">
-          Email
-        </label>
-        <input
-          type="email"
-          className="form-control"
-          id="email"
-          name="email"
-          value={values.email}
-          onBlur={handleInputBlur}
-          onChange={handleInputChange}
-        />
-        {emailIsInValid && (
-          <div className="invalid-feedback d-block">Enter valid email.</div>
-        )}
-      </div>
-      <div className="mb-4">
-        <label htmlFor="password" className="form-label">
-          Password
-        </label>
-        <input
-          type="password"
-          className="form-control"
-          id="password"
-          name="password"
-          value={values.password}
-          onBlur={handleInputBlur}
-          onChange={handleInputChange}
-        />
-        {passwordIsInvalid && (
-          <div className="invalid-feedback d-block">
-            Password should be minimum 6 letters
-          </div>
-        )}
-      </div>
+
+      <Input
+        labelText="Email"
+        id="email"
+        error={emailIsInValid && "Enter Valid Email"}
+        type="email"
+        name="email"
+        value={values.email}
+        onBlur={handleInputBlur}
+        onChange={handleInputChange}
+      />
+      <Input
+        type="password"
+        name="password"
+        id="password"
+        labelText="Password"
+        error={passwordIsInvalid && "Password should be minimum 6 letters"}
+        value={values.password}
+        onBlur={handleInputBlur}
+        onChange={handleInputChange}
+      />
+
       <div className="mb-3">
         <button className="btn btn-outline-warning me-2">Submit</button>
         <button className="btn btn-outline-light">Reset</button>
