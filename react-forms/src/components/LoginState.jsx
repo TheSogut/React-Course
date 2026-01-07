@@ -1,11 +1,13 @@
 import { useState } from "react";
 
 export default function Login() {
-  // const [newEmail, setEmail] = useState("aa");
-  // const [newPassword, setPassword] = useState("bb");
-
   const initalValues = { email: "", password: "" };
+
   const [values, setValues] = useState(initalValues);
+
+  const emailIsInValid = values.email !== "" && !values.email.includes("@");
+  const passwordIsInvalid =
+    values.password !== "" && values.password.length <= 5;
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -40,6 +42,9 @@ export default function Login() {
           value={values.email}
           onChange={handleInputChange}
         />
+        {emailIsInValid && (
+          <div className="invalid-feedback d-block">Enter valid email.</div>
+        )}
       </div>
       <div className="mb-4">
         <label htmlFor="password" className="form-label">
@@ -53,6 +58,11 @@ export default function Login() {
           value={values.password}
           onChange={handleInputChange}
         />
+        {passwordIsInvalid && (
+          <div className="invalid-feedback d-block">
+            Password should be minimum 6 letters
+          </div>
+        )}
       </div>
       <div className="mb-3">
         <button className="btn btn-outline-warning me-2">Submit</button>
