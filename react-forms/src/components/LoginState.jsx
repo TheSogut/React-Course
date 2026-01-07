@@ -1,47 +1,33 @@
 import { useState } from "react";
 import Input from "./Input";
+import useInput from "../hooks/useInput";
+import { hasMinLength, isEmail, isNotEmpty } from "../utils/validation";
 
 export default function Login() {
-  const initalValues = { email: "", password: "" };
-
-  const [values, setValues] = useState(initalValues);
-
-  const [isEdited, setIsEdited] = useState({ email: false, password: false });
-
-  const emailIsInValid = isEdited.email && !values.email.includes("@");
-  const passwordIsInvalid = isEdited.password && values.password.length <= 5;
-
-  function handleInputBlur(e) {
-    const name = e.target.name;
-
-    setIsEdited((prev) => ({
-      ...prev,
-      [name]: true,
-    }));
-  }
+  const {
+    value: emailValue,
+    handleInputChange: handleEmailChange,
+    handleInputBlur: handleEmailBlur,
+    hasError: emailHasError,
+  } = useInput("", (value) => isEmail(value) && isNotEmpty(value));
+  const {
+    value: passwordValue,
+    handleInputChange: handlePasswordChange,
+    handleInputBlur: handlePasswordBlur,
+    hasError: passwordHasError,
+  } = useInput("", (value) => hasMinLength(value, 5));
 
   function handleSubmit(e) {
     e.preventDefault();
-    console.log(values);
-  }
 
-  function handleInputChange(e) {
-    const name = e.target.name;
-    const value = e.target.value;
-
-    setValues({
-      ...values,
-      [name]: value,
-    });
-
-    setIsEdited((prev) => ({
-      ...prev,
-      [name]: false,
-    }));
+    if (emailIsInValid || passwordIsInvalid) {
+      return;
+    }
+    console.log(emailValue, passwordValue);
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <div className="header">
         <h1>Login</h1>
         <p>Please enter your login and password!</p>
@@ -50,22 +36,22 @@ export default function Login() {
       <Input
         labelText="Email"
         id="email"
-        error={emailIsInValid && "Enter Valid Email"}
+        error={emailHasError && "Enter Valid Email"}
         type="email"
         name="email"
-        value={values.email}
-        onBlur={handleInputBlur}
-        onChange={handleInputChange}
+        value={emailValue}
+        onBlur={handleEmailBlur}
+        onChange={handleEmailChange}
       />
       <Input
         type="password"
         name="password"
         id="password"
         labelText="Password"
-        error={passwordIsInvalid && "Password should be minimum 6 letters"}
-        value={values.password}
-        onBlur={handleInputBlur}
-        onChange={handleInputChange}
+        error={passwordHasError && "Password should be minimum 6 letters"}
+        value={passwordValue}
+        onBlur={handlePasswordBlur}
+        onChange={handlePasswordChange}
       />
 
       <div className="mb-3">
