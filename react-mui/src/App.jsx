@@ -1,12 +1,22 @@
 import Button from "@mui/material/Button";
 import ButtonUsage from "./components/ButtonUsage";
 import TypographyUsage from "./components/TypographyUsage";
+import TextFieldUsage from "./components/TextFieldUsage";
+import SelectUsage from "./components/SelectUsage";
+import RadioButtonUsage from "./components/RadioButtonUsage";
+import CheckBoxUsage from "./components/CheckBoxUsage";
+import CardUsage from "./components/CardUsage";
 
 function App() {
   return (
     <>
-      <ButtonUsage />
+      {/* <ButtonUsage /> */}
       {/* <TypographyUsage /> */}
+      {/* <TextFieldUsage /> */}
+      {/* <SelectUsage /> */}
+      {/* <RadioButtonUsage /> */}
+      {/* <CheckBoxUsage /> */}
+      <CardUsage />
     </>
   );
 }
